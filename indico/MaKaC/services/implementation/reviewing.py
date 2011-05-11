@@ -193,6 +193,39 @@ class ConferenceReviewingDefaultDueDateModification(ConferenceReviewingPRMBase):
             return _("Date has not been set yet.")
 
 
+class ConferenceReviewingRefereeDeadlineModification(ConferenceReviewingDateTimeModificationBase):
+
+    def _checkParams(self):
+        ConferenceReviewingDateTimeModificationBase._checkParams(self)
+        self._contributions = self._params.get("contributions", [])
+
+    def _setParam(self):
+        for contribId in self._contributions:
+            self._conf.getContributionById(contribId).getReviewManager().getLastReview().setRefereeDueDate(self._pTime)
+
+    def _handleGet(self):
+        date = self._conf.getConfPaperReview().getAdjustedDefaultRefereeDueDate()
+        if date:
+            return datetime.datetime.strftime(date,'%d/%m/%Y %H:%M')
+        else:
+            return _("Date has not been set yet.")
+
+
+class ConferenceReviewingGetContributionDeadlines(ConferenceReviewingAssignStaffBasePRM):
+
+    def _checkParams(self):
+        ConferenceReviewingAssignStaffBasePRM._checkParams(self)
+        self._contributions = self._params.get("contributions", [])
+
+    def _getAnswer(self):
+        # build a dictionary with the deadlines of the modified contributions
+        result = {}
+        for contribId in self._contributions:
+            date = self._conf.getContributionById(contribId).getReviewManager().getLastReview().getRefereeDueDate()
+            result[contribId] = datetime.datetime.strftime(date,'%Y-%m-%d')
+        return result
+
+
 class ConferenceReviewingAutoEmailsModificationPRM(ConferenceReviewingSetupTextModificationBase ):
 
     def _handleSet(self):
@@ -1068,6 +1101,8 @@ methodMap = {
     "conference.deleteTemplate" : ConferenceReviewingDeleteTemplate,
     "conference.changeCompetences": ConferenceReviewingCompetenceModification,
     "conference.changeDefaultDueDate" : ConferenceReviewingDefaultDueDateModification,
+    "conference.changeRefereeDeadline" : ConferenceReviewingRefereeDeadlineModification,
+    "conference.getContributionListDeadline" : ConferenceReviewingGetContributionDeadlines,
     "conference.attributeList" : ConferenceReviewingContributionsAttributeList,
     "conference.contributionsIdPerSelectedAttribute" : ConferenceReviewingContributionsPerSelectedAttributeList,
     "conference.userCompetencesList": ConferenceReviewingUserCompetenceList,

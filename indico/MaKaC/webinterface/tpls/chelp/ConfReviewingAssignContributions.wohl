@@ -4,7 +4,7 @@
     xsi:noNamespaceSchemaLocation="wohl.xsd" version="0.1">
 
     <page name="ConfReviewingAssignContributions">
-    
+
         <tooltip name="showHideFiltering" target="//*[@id='showHideFilteringHelp']">
             <translation language="en">
                 <text>
@@ -12,7 +12,7 @@
                 </text>
             </translation>
         </tooltip>
-    
+
         <tooltip name="applyFilter" target="//*[@id='applyFilterHelp']">
             <translation language="en">
                 <text>
@@ -25,7 +25,7 @@
                 </text>
             </translation>
         </tooltip>
-        
+
         <tooltip name="assignReferee" target="//*[@id='assignRefereeHelp']">
             <translation language="en">
                 <text>
@@ -35,10 +35,12 @@
                         (A contribution is selected if its checkbox is checked).</p>
                         <p>Press <strong>Remove</strong> to remove the Referee from the selected contributions.
                         (A contribution is selected if its checkbox is checked).</p>
+                        <p>Press <strong>Change deadline</strong> to change the referee deadline of the selected contributions.
+                        (A contribution is selected if its checkbox is checked).</p>
                 </text>
             </translation>
         </tooltip>
-        
+
         <tooltip name="assignEditor" target="//*[@id='assignEditorHelp']">
             <translation language="en">
                 <text>
@@ -51,7 +53,7 @@
                 </text>
             </translation>
         </tooltip>
-        
+
         <tooltip name="assignReviewer" target="//*[@id='assignReviewerHelp']">
             <translation language="en">
                 <text>
@@ -68,7 +70,7 @@
                 </text>
             </translation>
         </tooltip>
-        
+
     </page>
-    
+
 </wohl>

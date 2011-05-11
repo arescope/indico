@@ -411,6 +411,7 @@ type("NotificationBalloonPopup", ["BalloonPopup"],
  * It will have a title, a close button, and an OK button.
  * @param {Html or String} title The title of the error popup.
  * @param {Element} content Anything you want to put inside.
+ * @param {function} callback. Action to do by clicking in OK button
  */
 type("AlertPopup", ["ExclusivePopupWithButtons"],
     {
@@ -444,6 +445,7 @@ type("AlertPopup", ["ExclusivePopupWithButtons"],
         this.ExclusivePopupWithButtons(title, this.callback);
     }
 );
+
 
 /**
  * Utility function to display a simple alert popup.

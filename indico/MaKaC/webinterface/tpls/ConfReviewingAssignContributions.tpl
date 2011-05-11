@@ -135,7 +135,8 @@
                 <a id="assignRefereePerTrackButton_top" class="dropDownMenu fakeLink"  style="margin-left: 15px; margin-right: 15px">${ _("Assign per ...")}
                 </a>
             </span>|
-            <a id="removeRefereeButton_top" class="fakeLink"  style="margin-left: 15px; margin-right: 15px">${ _("Remove")}</a>
+            <a id="removeRefereeButton_top" class="fakeLink"  style="margin-left: 15px; margin-right: 15px">${ _("Remove")}</a>|
+            <a id="changeDeadlineRefereeButton_top" class="fakeLink"  style="margin-left: 15px; margin-right: 15px">${ _("Change deadline")}</a>
         </td>
     </tr>
     % endif
@@ -252,7 +253,8 @@
                 <a id="assignRefereePerTrackButton_top" class="dropDownMenu fakeLink"  style="margin-left: 15px; margin-right: 15px">${ _("Assign per ...")}
                 </a>
             </span>|
-            <a id="removeRefereeButton_bottom" class="fakeLink"  style="margin-left: 15px; margin-right: 15px">${ _("Remove")}</a>
+            <a id="removeRefereeButton_bottom" class="fakeLink"  style="margin-left: 15px; margin-right: 15px">${ _("Remove")}</a>|
+            <a id="changeDeadlineRefereeButton_bottom" class="fakeLink"  style="margin-left: 15px; margin-right: 15px">${ _("Change deadline")}</a>
         </td>
     </tr>
     % endif
@@ -619,7 +621,7 @@ var contributionTemplate = function(contribution) {
     row.append(cell9);
 
     // Cell10: due date of the contribution
-    var cell10 = Html.td({className:'contributionDataCell'});
+    var cell10 = Html.td({id:'deadlineCell'+contribution.id, className:'contributionDataCell'});
     if (contribution.reviewManager.lastReview.refereeDueDate == null) {
         cell10.set("");
     }
@@ -742,10 +744,11 @@ var deselectWithoutReviewer = function(contributions) {
  * @param {Object} contributions
  * @param {Object} order
  * @param {Object} role
+ * @param {Boolean} deadline, If it is true means we want to check it for the deadline functionality
  */
-function checkAllHaveReferee(contributions, order, role, assignPerAttribute) {
+function checkAllHaveReferee (contributions, order, role, assignPerAttribute, deadline) {
     var contributionsWithoutReferee = [];
-    for (var i in contributions) {
+    for (i in contributions) {
         contributionId = contributions[i];
         contribution = getContribution(contributionId);
         if (contribution.reviewManager.referee == null) {
@@ -753,7 +756,16 @@ function checkAllHaveReferee(contributions, order, role, assignPerAttribute) {
         }
     }
     if (contributionsWithoutReferee.length == contributions.length) {
-        (new AlertPopup($T("Warning"), $T("None of the contributions you checked have a Referee. You can only add a layout reviewer or a content reviewer if the contribution has a referee."))).open();
+        if (!deadline) {
+            var noRefereePopup = new AlertPopup($T("Assigning layout reviewer or content reviewer"), Html.div({},
+                    Html.span({}, $T("None of the contributions you checked have a Referee. ")),
+                    Html.span({}, $T("You can only add a layout reviewer or a content reviewer if the contribution has a referee."))));
+        } else {
+            var noRefereePopup = new AlertPopup($T("Changing referee deadline"), Html.div({},
+                    Html.span({}, $T("None of the contributions you checked have a Referee. ")),
+                    Html.span({}, $T("You can only change the deadline if the contribution has a referee."))));
+        }
+        noRefereePopup.open();
         return false;
     }
 
@@ -763,37 +775,68 @@ function checkAllHaveReferee(contributions, order, role, assignPerAttribute) {
             (new AlertPopup($T("Warning"), $T("Some of the contributions you checked have a Referee. You can only add a layout reviewer or a content reviewer if the contribution has a referee."))).open();
             return false;
         } else {
-            title = $T('Contributions without referee');
-
+            var title =$T('Contributions without referee');
             var popup = new ExclusivePopupWithButtons(title, function () {
-                popup.close();
+             popup.close();
             }, false, false, true);
 
-            popup._getButtons = function() {
-                return [
-                    [$T('Yes'), function() {
-                        deselectWithoutReferee(contributions);
-                        fetchUsers(order, role);
-                        popup.close();
-                    }],
-                    [$T('No'), function() {
-                        popup.close();
-                    }]
-                ];
-            };
+            if (!deadline) {
 
-            popup.draw = function () {
-                var span1 = Html.span({}, $T("Some of the contributions you checked do not have a Referee."));
-                var span2 = Html.span({}, $T("You can only add an editor or a reviewer if the contribution has a referee."));
-                var span3 = Html.span({}, $T("Do you want to add that {0} only to the contributions with a referee?").format(role));
-                var all = Widget.lines([span1, span2, span3]);
-                return this.ExclusivePopupWithButtons.prototype.draw.call(this, Html.div({
-                    style: {
-                        height: '130px',
-                        width: '420px'
-                    }
-                }, [all]));
-            };
+                popup._getButtons = function() {
+                    return [
+                        [$T('Yes'), function() {
+                            deselectWithoutReferee(contributions);
+                            fetchUsers(order, role);
+                            popup.close();
+                        }],
+                        [$T('No'), function() {
+                            popup.close();
+                        }]
+                    ];
+                };
+
+                popup.draw = function(){
+
+                    var span1 = Html.span({}, $T("Some of the contributions you checked do not have a Referee."));
+                    var span2 = Html.span({}, $T("You can only add an editor or a reviewer if the contribution has a referee."));
+                    var span3 = Html.span({}, $T("Do you want to add that " + role + " only to the contributions with a referee?"));
+                    var all = Widget.lines([span1, span2, span3]);
+                    return this.ExclusivePopupWithButtons.prototype.draw.call(this, Html.div({
+                        style: {
+                            height: '130px',
+                            width: '420px'
+                            }
+                    },[all]));
+                };
+            } else {
+
+                popup._getButtons = function() {
+                    return [
+                        [$T('Yes'), function() {
+                            deselectWithoutReferee(contributions);
+                            changeRefereeDeadline();
+                            popup.close();
+                        }],
+                        [$T('No'), function() {
+                            popup.close();
+                        }]
+                    ];
+                };
+
+                popup.draw = function(){
+
+                    var span1 = Html.span({}, $T("Some of the contributions you checked do not have a Referee."));
+                    var span2 = Html.span({}, $T("You can only change the referee deadline if the contribution has a referee."));
+                    var span3 = Html.span({}, $T("Do you want to change the deadline only for the contributions with a referee?"));
+                    var all = Widget.lines([span1, span2, span3]);
+                    return this.ExclusivePopupWithButtons.prototype.draw.call(this, Html.div({
+                        style: {
+                            height: '130px',
+                            width: '420px'
+                            }
+                    },[all]));
+                };
+            }
             popup.open();
             return false;
         }
@@ -1178,7 +1221,7 @@ function fetchUsers(order, role) {
 
     if ((order == 'assign' && role == 'editor') || (order == 'add' && role == 'reviewer')) {
         % if not (ConfReview.getChoice() == CPR.LAYOUT_REVIEWING or ConfReview.getChoice() == CPR.NO_REVIEWING):
-            if (!checkAllHaveReferee(checkedContributions, order, role, false)) {
+            if (!checkAllHaveReferee(checkedContributions, order, role, false, false)) {
                 return;
             }
         % endif
@@ -1394,7 +1437,7 @@ function fetchUsersPerAttribute(order, role, attribute) {
                             }
                             if ((order == 'assign' && role == 'editor') || (order == 'add' && role == 'reviewer')) {
                                 % if not(ConfReview.getChoice() == CPR.LAYOUT_REVIEWING or ConfReview.getChoice() == CPR.NO_REVIEWING):
-                                    if (!checkAllHaveReferee(contrPerAttribute, order, role, true)) {
+                                    if (!checkAllHaveReferee(contrPerAttribute, order, role, true, false)) {
                                         return;
                                     }
                                 % endif
@@ -1607,6 +1650,62 @@ var removeUser = function(role) {
     }
 }
 
+
+
+
+/**
+ * Changes the referee deadline for the selected contributions.
+ */
+var changeRefereeDeadline = function() {
+    // Check if there are selected contributions
+    var checkedContributions = getCheckedContributions();
+    if (checkedContributions.length == 0) {
+        var noContribPopup = new AlertPopup($T("Changing referee deadline"), Html.span({}, $T("Please select at least 1 contribution")));
+        noContribPopup.open();
+        return;
+    }
+
+    if (checkAllHaveReferee(checkedContributions, null, null, false, true)) {
+        // display the popup where the user will select the deadline
+        var header = Html.div({style:{paddingBottom:'10px', textAlign:'center'}}, $T("Please, edit and save the deadline you wish to apply and then click on OK button."));
+        var content = Html.div({style:{textAlign:'center'}});
+        var popupContent = Html.div();
+        popupContent.append(header);
+        popupContent.append(content);
+        // params for the request
+        var params = {conference: '${ Conference.getId() }', contributions: checkedContributions};
+        var dateEditor = new IndicoUI.Widgets.Generic.dateEditor(content, 'reviewing.conference.changeRefereeDeadline', params, null, true);
+        // actions to do after changing the date.
+        var updateDates = function() {
+            var killProgress = IndicoUI.Dialogs.Util.progress();
+            indicoRequest(
+                    'reviewing.conference.getContributionListDeadline',
+                    params,
+                    function(result, error) {
+                        if (!error) {
+                            for (i in checkedContributions) {
+                                contributionId = checkedContributions[i];
+                                contribution = getContribution(contributionId);
+                                contribution.reviewManager.lastReview.refereeDueDate.date = result[contributionId];
+                                updateContribution(contributionId);
+                                IndicoUI.Effect.highLight('deadlineCell'+contributionId, 'orange', 2000);
+                                $E('cb' + contributionId).dom.checked = true; //updateContribution will build a row with an unchecked checkbox
+                                isSelected(contributionId);
+                            }
+                            killProgress();
+                        } else {
+                            killProgress();
+                            IndicoUtil.errorReport(error);
+                        }
+                    }
+                );
+        };
+        var popup = new AlertPopup($T("Changing referee deadline"), popupContent, updateDates);
+        popup.open();
+    }
+};
+
+
 // Code to be executed on page load
 
 % if not IsOnlyReferee:
@@ -1647,6 +1746,8 @@ assignPerTrackMenus('referee', 'bottom');
 $E('assignRefereeButton_bottom').observeClick(function(){ fetchUsers('assign', 'referee'); });
 $E('removeRefereeButton_top').observeClick(function(){ removeUser('referee') });
 $E('removeRefereeButton_bottom').observeClick(function(){ removeUser('referee') });
+$E('changeDeadlineRefereeButton_top').observeClick(function(){ changeRefereeDeadline(); });
+$E('changeDeadlineRefereeButton_bottom').observeClick(function(){ changeRefereeDeadline(); });
 % endif
 
 % if not (ConfReview.getChoice() == CPR.CONTENT_REVIEWING or ConfReview.getChoice() == CPR.NO_REVIEWING):
