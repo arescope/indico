@@ -60,43 +60,43 @@ class MARCXMLGenerator:
 
         out.closeTag("record")
 
-    def generate(self, obj, out=None, overrideCache=False):
+    def generate(self, obj, out=None, overrideCache=False, includeIndicator=False):
         if not out:
             out = self._XMLGen
 
         if isinstance(obj, conference.Conference):
-            self.confToXMLMarc(obj, out=out, overrideCache=overrideCache)
+            self.confToXMLMarc(obj, out=out, overrideCache=overrideCache, includeIndicator=includeIndicator)
         elif isinstance(obj, conference.Contribution):
-            self.contToXMLMarc(obj, out=out, overrideCache=overrideCache)
+            self.contToXMLMarc(obj, out=out, overrideCache=overrideCache, includeIndicator=includeIndicator)
         elif isinstance(obj, conference.SubContribution):
-            self.subContToXMLMarc(obj, out=out, overrideCache=overrideCache)
+            self.subContToXMLMarc(obj, out=out, overrideCache=overrideCache, includeIndicator=includeIndicator)
         else:
             raise Exception("unknown object type: %s" % obj.__class__)
 
-    def confToXMLMarc(self, obj, out=None, overrideCache=False):
+    def confToXMLMarc(self, obj, out=None, overrideCache=False, includeIndicator=False):
         if not out:
             out = self._XMLGen
         out.openTag("record")
-        self._outGen.confToXMLMarc21(obj, out=out, overrideCache=overrideCache)
+        self._outGen.confToXMLMarc21(obj, out=out, overrideCache=overrideCache, includeIndicator=includeIndicator)
         out.closeTag("record")
 
-    def sessionToXMLMarc(self, obj, out=None, overrideCache=False):
+    def sessionToXMLMarc(self, obj, out=None, overrideCache=False, includeIndicator=False):
         if not out:
             out = self._XMLGen
         out.openTag("record")
-        self._outGen.sessionToXMLMarc21(obj, out=out, overrideCache=overrideCache)
+        self._outGen.sessionToXMLMarc21(obj, out=out, overrideCache=overrideCache, includeIndicator=includeIndicator)
         out.closeTag("record")
 
-    def contToXMLMarc(self, obj, out=None, overrideCache=False):
+    def contToXMLMarc(self, obj, out=None, overrideCache=False, includeIndicator=False):
         if not out:
             out = self._XMLGen
         out.openTag("record")
-        self._outGen.contribToXMLMarc21(obj, out=out, overrideCache=overrideCache)
+        self._outGen.contribToXMLMarc21(obj, out=out, overrideCache=overrideCache, includeIndicator=includeIndicator)
         out.closeTag("record")
 
-    def subContToXMLMarc(self, obj, out=None, overrideCache=False):
+    def subContToXMLMarc(self, obj, out=None, overrideCache=False, includeIndicator=False):
         if not out:
             out = self._XMLGen
         out.openTag("record")
-        self._outGen.subContribToXMLMarc21(obj, out=out, overrideCache=overrideCache)
+        self._outGen.subContribToXMLMarc21(obj, out=out, overrideCache=overrideCache, includeIndicator=includeIndicator)
         out.closeTag("record")

@@ -1074,7 +1074,7 @@ class outputGenerator(Observable):
         out.writeXML(xml)
 
 
-    def confToXMLMarc21(self,conf,includeSession=1,includeContribution=1,includeMaterial=1,out=None, overrideCache=False):
+    def confToXMLMarc21(self,conf,includeSession=1,includeContribution=1,includeMaterial=1,out=None, overrideCache=False, includeIndicator=False):
 
         if not out:
             out = self._XMLGen
@@ -1088,13 +1088,13 @@ class outputGenerator(Observable):
         else:
             # No cache, build the XML
             temp = XMLGen(init=False)
-            self._confToXMLMarc21(conf,includeSession,includeContribution,includeMaterial, out=temp)
+            self._confToXMLMarc21(conf,includeSession,includeContribution,includeMaterial, out=temp, includeIndicator=includeIndicator)
             xml = temp.getXml()
             # save XML in cache
             self.cache.cacheObject(version, xml, conf)
         out.writeXML(xml)
 
-    def _confToXMLMarc21(self,conf,includeSession=1,includeContribution=1,includeMaterial=1,out=None):
+    def _confToXMLMarc21(self,conf,includeSession=1,includeContribution=1,includeMaterial=1,out=None, includeIndicator=False):
         if not out:
             out = self._XMLGen
 
@@ -1242,7 +1242,7 @@ class outputGenerator(Observable):
 
         self._generateAccessList(conf, out, specifyId=False)
 
-    def contribToXMLMarc21(self,cont,includeMaterial=1, out=None, overrideCache=False):
+    def contribToXMLMarc21(self,cont,includeMaterial=1, out=None, overrideCache=False, includeIndicator=False):
         if not out:
             out = self._XMLGen
         #try to get a cache
@@ -1255,14 +1255,14 @@ class outputGenerator(Observable):
         else:
             # No cache, build the XML
             temp = XMLGen(init=False)
-            self._contribToXMLMarc21(cont,includeMaterial, out=temp)
+            self._contribToXMLMarc21(cont,includeMaterial, out=temp, includeIndicator=includeIndicator)
             xml = temp.getXml()
             # save XML in cache
             self.cache.cacheObject(version, xml, cont)
         out.writeXML(xml)
 
 
-    def _contribToXMLMarc21(self,cont,includeMaterial=1, out=None):
+    def _contribToXMLMarc21(self,cont,includeMaterial=1, out=None, includeIndicator=False):
         if not out:
             out = self._XMLGen
 
@@ -1416,7 +1416,7 @@ class outputGenerator(Observable):
     #fb
 
 
-    def subContribToXMLMarc21(self,subCont,includeMaterial=1, out=None, overrideCache=False):
+    def subContribToXMLMarc21(self,subCont,includeMaterial=1, out=None, overrideCache=False, includeIndicator=False):
         if not out:
             out = self._XMLGen
         #try to get a cache
@@ -1429,14 +1429,14 @@ class outputGenerator(Observable):
         else:
             # No cache, build the XML
             temp = XMLGen(init=False)
-            self._subContribToXMLMarc21(subCont,includeMaterial, out=temp)
+            self._subContribToXMLMarc21(subCont,includeMaterial, out=temp, includeIndicator=includeIndicator)
             xml = temp.getXml()
             # save XML in cache
             self.cache.cacheObject(version, xml, subCont)
         out.writeXML(xml)
 
 
-    def _subContribToXMLMarc21(self,subCont,includeMaterial=1, out=None):
+    def _subContribToXMLMarc21(self,subCont,includeMaterial=1, out=None, includeIndicator=False):
         if not out:
             out = self._XMLGen
 
