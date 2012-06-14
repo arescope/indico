@@ -26,12 +26,13 @@ import time
 
 # plugin imports
 from indico.ext.livesync.agent import AgentProviderComponent, RecordUploader
-from indico.ext.livesync.bistate import BistateBatchUploaderAgent
+from indico.ext.livesync.batch import BaseBatchUploaderAgent, STATUS_DELETED
 from indico.ext.livesync.invenio.invenio_connector import InvenioConnector
+from indico.ext.livesync.metadata import MARCXMLGenerator
+from MaKaC.common.xmlGen import XMLGen
 from indico.util.date_time import nowutc
 
-
-class InvenioBatchUploaderAgent(BistateBatchUploaderAgent):
+class InvenioBatchUploaderAgent(BaseBatchUploaderAgent):
 
     def _run(self, records, logger=None, monitor=None, dbi=None, task=None):
 
@@ -49,6 +50,42 @@ class InvenioBatchUploaderAgent(BistateBatchUploaderAgent):
         # iterate over the returned records and upload them
         return uploader.iterateOver(records, dbi=dbi)
 
+    def _getMetadata(self, records, logger=None):
+        """
+        Retrieves the MARCXML metadata for the record
+        """
+        xg = XMLGen()
+        mg = MARCXMLGenerator(xg)
+        # set the permissions
+        mg.setPermissionsOf(self._access)
+
+        xg.initXml()
+        xg.openTag("collection", [["xmlns", "http://www.loc.gov/MARC21/slim"]])
+
+        for record, recId, operation in records:
+            try:
+                if operation & STATUS_DELETED:
+                    mg.generateDeleted(recId)
+                else:
+                    if record.getOwner():
+                        # caching is disabled because ACL changes do not trigger
+                        # notifyModification, and consequently can be classified as a hit
+                        # even if they were changed
+                        # TODO: change overrideCache to False when this problem is solved
+                        mg.generate(record, overrideCache=True)
+                    else:
+                        logger.warning('%s (%s) is marked as non-deleted and has no owner' % \
+                                       (record, recId))
+            except:
+                if logger:
+                    logger.exception("Something went wrong while processing '%s' (recId=%s) (owner=%s)! Possible metadata errors." %
+                                     (record, recId, record.getOwner()))
+                    # avoid duplicate record
+                self._removeUnfinishedRecord(mg._XMLGen)
+
+        xg.closeTag("collection")
+
+        return xg.getXml()
 
 class InvenioRecordUploader(RecordUploader):
     """

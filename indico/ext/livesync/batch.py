@@ -19,22 +19,17 @@
 
 # plugin imports
 from indico.ext.livesync.agent import PushSyncAgent
-from indico.ext.livesync.metadata import MARCXMLGenerator
 
 # legacy indico
 from MaKaC import conference
-from MaKaC.accessControl import AccessWrapper
-from MaKaC.common.xmlGen import XMLGen
-
 # some useful constants
-STATUS_DELETED, STATUS_CREATED, STATUS_CHANGED = 1, 2, 4
-
+STATUS_DELETED, STATUS_CREATED, STATUS_CHANGED, STATUS_PROTECTION_CHANGED, STATUS_ACL_CHANGED, STATUS_MOVED  = 1, 2, 4, 8, 16, 32
 
 # clear the ZEO local cache each new N records
 CACHE_SWEEP_LIMIT = 10000
 
 
-class BistateRecordProcessor(object):
+class BaseRecordProcessor(object):
 
     _lastCacheSweep = 0
 
@@ -77,15 +72,15 @@ class BistateRecordProcessor(object):
             cls._setStatus(chgSet, scontrib, state)
 
     @classmethod
-    def _computeProtectionChanges(cls, obj, action, chgSet, dbi=None):
+    def _computeProtectionChanges(cls, obj, action, chgSet, status, dbi=None):
         if isinstance(obj, conference.Category):
-            cls._breakDownCategory(obj, chgSet, STATUS_CHANGED, dbi=dbi)
+            cls._breakDownCategory(obj, chgSet, status, dbi=dbi)
         elif isinstance(obj, conference.Conference):
-            cls._breakDownConference(obj, chgSet, STATUS_CHANGED)
+            cls._breakDownConference(obj, chgSet, status)
         elif isinstance(obj, conference.Contribution):
-            cls._breakDownContribution(obj, chgSet, STATUS_CHANGED)
+            cls._breakDownContribution(obj, chgSet, status)
         elif isinstance(obj, conference.SubContribution):
-            cls._setStatus(chgSet, obj, STATUS_CHANGED)
+            cls._setStatus(chgSet, obj, status)
         cls._cacheControl(dbi, chgSet)
 
     @classmethod
@@ -116,9 +111,11 @@ class BistateRecordProcessor(object):
                     # if the record has been created, mark it as such
                     cls._setStatus(records, obj, STATUS_CREATED)
 
-                elif action in ['set_private', 'set_public','acl_changed', 'moved']:
-                    # protection changes have to be handled more carefully
-                    cls._computeProtectionChanges(obj, action, records, dbi=dbi)
+                # protection changes have to be handled more carefully
+                elif action in ['set_private', 'set_public']:
+                    cls._computeProtectionChanges(obj, action, records, STATUS_ACL_CHANGED, dbi=dbi)
+                elif action in ['acl_changed', 'moved']:
+                    cls._computeProtectionChanges(obj, action, records, STATUS_CHANGED, dbi=dbi)
 
                 elif action == 'data_changed':
                     if not isinstance(obj, conference.Category):
@@ -131,9 +128,9 @@ class BistateRecordProcessor(object):
                 yield robj, None, state
 
 
-class BistateBatchUploaderAgent(PushSyncAgent):
+class BaseBatchUploaderAgent(PushSyncAgent):
     """
-    Invenio WebUpload-compatible LiveSync agent
+    Batch WebUpload-compatible LiveSync agent
     """
 
     _creationState = STATUS_CREATED
@@ -141,7 +138,7 @@ class BistateBatchUploaderAgent(PushSyncAgent):
 
     def __init__(self, aid, name, description, updateTime,
                  access=None, url=None):
-        super(BistateBatchUploaderAgent, self).__init__(
+        super(BaseBatchUploaderAgent, self).__init__(
             aid, name, description, updateTime, access)
         self._url = url
 
@@ -150,54 +147,16 @@ class BistateBatchUploaderAgent(PushSyncAgent):
         Translates the objects/states to an easy to read textual representation
         """
 
-        states = {1: 'DEL', 2: 'CRT', 4: 'MOD'}
+        states = {1: 'DEL', 2: 'CRT', 4: 'MOD', 8: 'PRO', 16: 'ACL', 32: 'MOV'}
 
         # unfold status
         parts = []
-        k = 4
+        k = 32
         while (k > 0):
             if status & k:
                 parts.append(states[k])
             k /= 2
         return "{0:<40} {1:<20} {2}".format(obj, objId, ' '.join(parts))
-
-    def _getMetadata(self, records, logger=None):
-        """
-        Retrieves the MARCXML metadata for the record
-        """
-        xg = XMLGen()
-        mg = MARCXMLGenerator(xg)
-        # set the permissions
-        mg.setPermissionsOf(self._access)
-
-        xg.initXml()
-        xg.openTag("collection", [["xmlns", "http://www.loc.gov/MARC21/slim"]])
-
-        for record, recId, operation in records:
-            deleted = operation & STATUS_DELETED
-            try:
-                if deleted:
-                    mg.generateDeleted(recId, overrideCache=True)
-                else:
-                    if record.getOwner():
-                        # caching is disabled because ACL changes do not trigger
-                        # notifyModification, and consequently can be classified as a hit
-                        # even if they were changed
-                        # TODO: change overrideCache to False when this problem is solved
-                        mg.generate(record, overrideCache=True, deleted=False)
-                    else:
-                        logger.warning('%s (%s) is marked as non-deleted and has no owner' % \
-                                       (record, recId))
-            except:
-                if logger:
-                    logger.exception("Something went wrong while processing '%s' (recId=%s) (owner=%s)! Possible metadata errors." %
-                                     (record, recId, record.getOwner()))
-                    # avoid duplicate record
-                self._removeUnfinishedRecord(mg._XMLGen)
-
-        xg.closeTag("collection")
-
-        return xg.getXml()
 
     def _removeUnfinishedRecord(self, xg):
         """
@@ -210,4 +169,4 @@ class BistateBatchUploaderAgent(PushSyncAgent):
         xg.xml.pop()
 
     def _generateRecords(self, data, lastTS, dbi=None):
-        return BistateRecordProcessor.computeRecords(data, self._access, dbi=dbi)
+        return BaseRecordProcessor.computeRecords(data, self._access, dbi=dbi)
