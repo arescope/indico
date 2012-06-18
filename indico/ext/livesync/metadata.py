@@ -21,7 +21,7 @@ from MaKaC import conference
 from indico.core.config import Config
 from MaKaC.common.output import outputGenerator
 from MaKaC import accessControl
-
+from indico.util.event import uniqueId
 
 class MARCXMLGenerator:
     """
@@ -57,6 +57,79 @@ class MARCXMLGenerator:
         out.openTag("datafield",[["tag","980"],["ind1"," "],["ind2"," "]])
         out.writeTag("subfield","DELETED",[["code","c"]])
         out.closeTag("datafield")
+
+        out.closeTag("record")
+
+    def generateResourceAdded(self, obj, out=None):
+        if not out:
+            out = self._XMLGen
+        if isinstance(obj,conference.Resource):
+            if obj.canAccess(self._user):
+                self._resourceAddedToMarc(obj, out)
+        else:
+            raise Exception("unknown object type: %s" % obj.__class__)
+
+    def _resourceAddedToMarc(self, obj, out):
+
+        out.openTag("record")
+
+        out.openTag("datafield",[["tag","980"],["ind1"," "],["ind2"," "]])
+        out.writeTag("subfield","ADD_RESOURCE",[["code","c"]])
+        out.closeTag("datafield")
+
+        out.openTag("datafield",[["tag","970"],["ind1"," "],["ind2"," "]])
+        out.writeTag("subfield","INDICO." + uniqueId(obj.getOwner().getOwner()),[["code","a"]])
+        out.closeTag("datafield")
+
+        self._outGen.resourceToXMLMarc21(obj, out)
+        self._outGen._generateAccessList(obj, out)
+        out.closeTag("record")
+
+    def generateACLChanged(self, obj, out=None):
+        if not out:
+            out = self._XMLGen
+        if not(isinstance(obj,conference.Conference) or isinstance(obj,conference.Contribution) \
+                                                or isinstance(obj, conference.SubContribution)):
+            raise Exception("unknown object type: %s" % obj.__class__)
+
+        out.openTag("record")
+
+        out.openTag("datafield",[["tag","970"],["ind1"," "],["ind2"," "]])
+        out.writeTag("subfield","INDICO." + uniqueId(obj),[["code","a"]])
+        out.closeTag("datafield")
+
+        out.openTag("datafield",[["tag","980"],["ind1"," "],["ind2"," "]])
+        out.writeTag("subfield", self._outGen._getRecordCollection(obj), [["code","a"]])
+        out.writeTag("subfield","ACL",[["code","c"]])
+        out.closeTag("datafield")
+
+        self._outGen._generateAccessList(obj, out, specifyId=False)
+
+        out.closeTag("record")
+
+    def generateMovedChanged(self, obj, out=None):
+        if not out:
+            out = self._XMLGen
+        if not(isinstance(obj,conference.Conference) or isinstance(obj,conference.Contribution) \
+                                                or isinstance(obj, conference.SubContribution)):
+            raise Exception("unknown object type: %s" % obj.__class__)
+
+        out.openTag("record")
+
+        out.openTag("datafield",[["tag","970"],["ind1"," "],["ind2"," "]])
+        out.writeTag("subfield","INDICO." + uniqueId(obj),[["code","a"]])
+        out.closeTag("datafield")
+
+        out.openTag("datafield",[["tag","980"],["ind1"," "],["ind2"," "]])
+        out.writeTag("subfield", self._outGen._getRecordCollection(obj), [["code","a"]])
+        out.writeTag("subfield","CATEGORY",[["code","c"]])
+        out.closeTag("datafield")
+
+        for path in obj.getConference().getCategoriesPath():
+            out.openTag("datafield",[["tag","650"],["ind1"," "],["ind2","7"]])
+            out.writeTag("subfield", ":".join(path), [["code","a"]])
+            out.writeTag("subfield", "/".join(conference.CategoryManager().getById(categId).getTitle() for categId in path), [["code","e"]])
+            out.closeTag("datafield")
 
         out.closeTag("record")
 

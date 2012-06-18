@@ -109,6 +109,12 @@ class IMetadataChangeListener(IListener):
     def infoChanged(self, obj):
         pass
 
+    def resourceAdded(self, obj, who):
+        pass
+
+    def resourceDeleted(self, obj, who):
+        pass
+
 
 class IMaterialDownloadListener(IListener):
 

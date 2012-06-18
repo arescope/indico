@@ -23,7 +23,7 @@ from indico.ext.livesync.agent import PushSyncAgent
 # legacy indico
 from MaKaC import conference
 # some useful constants
-STATUS_DELETED, STATUS_CREATED, STATUS_CHANGED, STATUS_PROTECTION_CHANGED, STATUS_ACL_CHANGED, STATUS_MOVED  = 1, 2, 4, 8, 16, 32
+STATUS_DELETED, STATUS_CREATED, STATUS_CHANGED, STATUS_ACL_CHANGED, STATUS_MOVED, STATUS_RESOURCE_ADDED , STATUS_RESOURCE_DELETED  = 1, 2, 4, 8, 16, 32, 64
 
 # clear the ZEO local cache each new N records
 CACHE_SWEEP_LIMIT = 10000
@@ -47,40 +47,41 @@ class BaseRecordProcessor(object):
         chgSet[obj] |= state
 
     @classmethod
-    def _breakDownCategory(cls, categ, chgSet, state, dbi=None):
+    def _breakDownCategory(cls, categ, chgSet, state, dbi=None, checkInheritance = False):
 
         # categories are never converted to records
 
         for conf in categ.iterAllConferences():
-            cls._breakDownConference(conf, chgSet, state)
+            cls._breakDownConference(conf, chgSet, state, checkInheritance=checkInheritance)
             cls._cacheControl(dbi, chgSet)
 
     @classmethod
-    def _breakDownConference(cls, conf, chgSet, state):
-
-        cls._setStatus(chgSet, conf, state)
+    def _breakDownConference(cls, conf, chgSet, state, checkInheritance = False):
+        if not checkInheritance or conf.getAccessProtectionLevel() == 0:
+            cls._setStatus(chgSet, conf, state)
 
         for contrib in conf.iterContributions():
-            cls._breakDownContribution(contrib, chgSet, state)
+            cls._breakDownContribution(contrib, chgSet, state, checkInheritance=checkInheritance)
 
     @classmethod
-    def _breakDownContribution(cls, contrib, chgSet, state):
-
-        cls._setStatus(chgSet, contrib, state)
-
+    def _breakDownContribution(cls, contrib, chgSet, state, checkInheritance = False):
+        if not checkInheritance or contrib.getAccessProtectionLevel() == 0:
+            cls._setStatus(chgSet, contrib, state)
         for scontrib in contrib.iterSubContributions():
-            cls._setStatus(chgSet, scontrib, state)
+            if not checkInheritance or scontrib.getAccessProtectionLevel() == 0:
+                cls._setStatus(chgSet, scontrib, state)
 
     @classmethod
-    def _computeProtectionChanges(cls, obj, action, chgSet, status, dbi=None):
+    def _computeProtectionChanges(cls, obj, action, chgSet, status, dbi=None, checkInheritance = False):
         if isinstance(obj, conference.Category):
-            cls._breakDownCategory(obj, chgSet, status, dbi=dbi)
+            cls._breakDownCategory(obj, chgSet, status, dbi=dbi, checkInheritance=checkInheritance)
         elif isinstance(obj, conference.Conference):
-            cls._breakDownConference(obj, chgSet, status)
+            cls._breakDownConference(obj, chgSet, status, checkInheritance=checkInheritance)
         elif isinstance(obj, conference.Contribution):
-            cls._breakDownContribution(obj, chgSet, status)
+            cls._breakDownContribution(obj, chgSet, status, checkInheritance=checkInheritance)
         elif isinstance(obj, conference.SubContribution):
-            cls._setStatus(chgSet, obj, status)
+            if not checkInheritance or obj.getAccessProtectionLevel() == 0:
+                cls._setStatus(chgSet, obj, status)
         cls._cacheControl(dbi, chgSet)
 
     @classmethod
@@ -112,14 +113,14 @@ class BaseRecordProcessor(object):
                     cls._setStatus(records, obj, STATUS_CREATED)
 
                 # protection changes have to be handled more carefully
-                elif action in ['set_private', 'set_public']:
-                    cls._computeProtectionChanges(obj, action, records, STATUS_ACL_CHANGED, dbi=dbi)
-                elif action in ['acl_changed', 'moved']:
+                elif action in ['set_private', 'set_public', 'acl_changed', 'moved']:
                     cls._computeProtectionChanges(obj, action, records, STATUS_CHANGED, dbi=dbi)
-
                 elif action == 'data_changed':
                     if not isinstance(obj, conference.Category):
                         cls._setStatus(records, obj, STATUS_CHANGED)
+                elif action in ['resource_added', 'resource_deleted']:
+                    if not isinstance(obj.getOwner().getOwner(), conference.Category):
+                        cls._setStatus(records, obj.getOwner().getOwner(), STATUS_CHANGED)
 
         for robj, state in records.iteritems():
             if state & STATUS_DELETED:

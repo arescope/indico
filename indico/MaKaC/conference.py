@@ -3940,7 +3940,7 @@ class Conference(CommonObjectBase, Locatable):
         newMat.setId( str(self.__materialGenerator.newCount()) )
         newMat.setOwner( self )
         self.materials[ newMat.getId() ] =  newMat
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def removeMaterial( self, mat ):
         if mat.getId() in self.materials.keys():
@@ -3950,19 +3950,14 @@ class Conference(CommonObjectBase, Locatable):
             self.notifyModification()
         elif mat.getId().lower() == 'paper':
             self.removePaper()
-            self.notifyModification()
         elif mat.getId().lower() == 'slides':
             self.removeSlides()
-            self.notifyModification()
         elif mat.getId().lower() == 'minutes':
             self.removeMinutes()
-            self.notifyModification()
         elif mat.getId().lower() == 'video':
             self.removeVideo()
-            self.notifyModification()
         elif mat.getId().lower() == 'poster':
             self.removePoster()
-            self.notifyModification()
 
     def recoverMaterial(self, recMat):
     # Id must already be set in recMat.
@@ -4090,7 +4085,7 @@ class Conference(CommonObjectBase, Locatable):
             raise MaKaCError( _("The paper for this conference has already been set"), _("Conference"))
         self.paper=newPaper
         self.paper.setOwner( self )
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def removePaper( self ):
         if self.paper is None:
@@ -4098,7 +4093,7 @@ class Conference(CommonObjectBase, Locatable):
         self.paper.delete()
         self.paper.setOwner(None)
         self.paper = None
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def recoverPaper(self, p):
         self.setPaper(p)
@@ -4117,7 +4112,7 @@ class Conference(CommonObjectBase, Locatable):
             raise MaKaCError( _("The slides for this conference have already been set"), _("Conference"))
         self.slides=newSlides
         self.slides.setOwner( self )
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def removeSlides( self ):
         if self.slides is None:
@@ -4125,7 +4120,7 @@ class Conference(CommonObjectBase, Locatable):
         self.slides.delete()
         self.slides.setOwner( None )
         self.slides= None
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def recoverSlides(self, s):
         self.setSlides(s)
@@ -4144,7 +4139,7 @@ class Conference(CommonObjectBase, Locatable):
             raise MaKaCError( _("The video for this conference has already been set"), _("Conference"))
         self.video=newVideo
         self.video.setOwner( self )
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def removeVideo( self ):
         if self.getVideo() is None:
@@ -4152,7 +4147,7 @@ class Conference(CommonObjectBase, Locatable):
         self.video.delete()
         self.video.setOwner(None)
         self.video = None
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def recoverVideo(self, v):
         self.setVideo(v)
@@ -4171,7 +4166,7 @@ class Conference(CommonObjectBase, Locatable):
             raise MaKaCError( _("the poster for this conference has already been set"), _("Conference"))
         self.poster=newPoster
         self.poster.setOwner( self )
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def removePoster( self ):
         if self.getPoster() is None:
@@ -4179,7 +4174,7 @@ class Conference(CommonObjectBase, Locatable):
         self.poster.delete()
         self.poster.setOwner(None)
         self.poster = None
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def recoverPoster(self, p):
         self.setPoster(p)
@@ -4198,14 +4193,14 @@ class Conference(CommonObjectBase, Locatable):
             raise MaKaCError( _("The Minutes for this conference has already been set"))
         self.minutes=newMinutes
         self.minutes.setOwner( self )
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def createMinutes( self ):
         if self.getMinutes() != None:
             raise MaKaCError( _("The minutes for this conference have already been created"), _("Conference"))
         self.minutes = Minutes()
         self.minutes.setOwner( self )
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
         return self.minutes
 
     def removeMinutes( self ):
@@ -4214,7 +4209,7 @@ class Conference(CommonObjectBase, Locatable):
         self.minutes.delete()
         self.minutes.setOwner( None )
         self.minutes = None
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def recoverMinutes(self, min):
         self.removeMinutes() # To ensure that the current minutes are put in
@@ -9217,7 +9212,7 @@ class Contribution(CommonObjectBase, Locatable):
             raise MaKaCError( _("The paper for this contribution has already been set"), _("Contribution"))
         self.paper=newPaper
         self.paper.setOwner( self )
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def removePaper( self ):
         if self.paper is None:
@@ -9225,7 +9220,7 @@ class Contribution(CommonObjectBase, Locatable):
         self.paper.delete()
         self.paper.setOwner(None)
         self.paper = None
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def recoverPaper(self, p):
         self.setPaper(p)
@@ -9239,7 +9234,7 @@ class Contribution(CommonObjectBase, Locatable):
             raise MaKaCError( _("The slides for this contribution have already been set"), _("contribution"))
         self.slides=newSlides
         self.slides.setOwner( self )
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def removeSlides( self ):
         if self.slides is None:
@@ -9247,7 +9242,7 @@ class Contribution(CommonObjectBase, Locatable):
         self.slides.delete()
         self.slides.setOwner( None )
         self.slides= None
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def recoverSlides(self, s):
         self.setSlides(s)
@@ -9261,7 +9256,7 @@ class Contribution(CommonObjectBase, Locatable):
             raise MaKaCError( _("the video for this contribution has already been set"))
         self.video=newVideo
         self.video.setOwner( self )
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def removeVideo( self ):
         if self.getVideo() is None:
@@ -9269,7 +9264,7 @@ class Contribution(CommonObjectBase, Locatable):
         self.video.delete()
         self.video.setOwner(None)
         self.video = None
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def recoverVideo(self, v):
         self.setVideo(v)
@@ -9288,7 +9283,7 @@ class Contribution(CommonObjectBase, Locatable):
             raise MaKaCError( _("the poster for this contribution has already been set"))
         self.poster=newPoster
         self.poster.setOwner( self )
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def removePoster( self ):
         if self.getPoster() is None:
@@ -9296,7 +9291,7 @@ class Contribution(CommonObjectBase, Locatable):
         self.poster.delete()
         self.poster.setOwner(None)
         self.poster = None
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def recoverPoster(self, p):
         self.setPoster(p)
@@ -9315,14 +9310,14 @@ class Contribution(CommonObjectBase, Locatable):
             raise MaKaCError( _("the Minutes for this contribution has already been set"))
         self.minutes=newMinutes
         self.minutes.setOwner( self )
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def createMinutes( self ):
         if self.getMinutes() != None:
             raise MaKaCError( _("The minutes for this contribution have already been created"), _("Contribution"))
         self.minutes = Minutes()
         self.minutes.setOwner( self )
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
         return self.minutes
 
     def removeMinutes( self ):
@@ -9331,7 +9326,7 @@ class Contribution(CommonObjectBase, Locatable):
         self.minutes.delete()
         self.minutes.setOwner( None )
         self.minutes = None
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def recoverMinutes(self, min):
         self.removeMinutes() # To ensure that the current minutes are put in
@@ -10413,19 +10408,14 @@ class SubContribution(CommonObjectBase, Locatable):
             self.notifyModification()
         elif mat.getId().lower() == 'paper':
             self.removePaper()
-            self.notifyModification()
         elif mat.getId().lower() == 'slides':
             self.removeSlides()
-            self.notifyModification()
         elif mat.getId().lower() == 'minutes':
             self.removeMinutes()
-            self.notifyModification()
         elif mat.getId().lower() == 'video':
             self.removeVideo()
-            self.notifyModification()
         elif mat.getId().lower() == 'poster':
             self.removePoster()
-            self.notifyModification()
 
     def recoverMaterial(self, recMat):
     # Id must already be set in recMat.
@@ -10480,7 +10470,7 @@ class SubContribution(CommonObjectBase, Locatable):
             raise MaKaCError( _("The paper for this subcontribution has already been set"), _("Contribution"))
         self.paper=newPaper
         self.paper.setOwner( self )
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def removePaper( self ):
         if self.getPaper() is None:
@@ -10488,7 +10478,7 @@ class SubContribution(CommonObjectBase, Locatable):
         self.paper.delete()
         self.paper.setOwner(None)
         self.paper = None
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def recoverPaper(self, p):
         self.setPaper(p)
@@ -10502,7 +10492,7 @@ class SubContribution(CommonObjectBase, Locatable):
             raise MaKaCError( _("The slides for this subcontribution have already been set"), _("Contribution"))
         self.slides=newSlides
         self.slides.setOwner( self )
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def removeSlides( self ):
         if self.getSlides() is None:
@@ -10510,7 +10500,7 @@ class SubContribution(CommonObjectBase, Locatable):
         self.slides.delete()
         self.slides.setOwner( None )
         self.slides = None
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def recoverSlides(self, s):
         self.setSlides(s)
@@ -10524,7 +10514,7 @@ class SubContribution(CommonObjectBase, Locatable):
             raise MaKaCError( _("the video for this subcontribution has already been set"))
         self.video=newVideo
         self.video.setOwner( self )
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def removeVideo( self ):
         if self.getVideo() is None:
@@ -10532,7 +10522,7 @@ class SubContribution(CommonObjectBase, Locatable):
         self.video.delete()
         self.video.setOwner(None)
         self.video = None
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def recoverVideo(self, v):
         self.setVideo(v)
@@ -10551,7 +10541,7 @@ class SubContribution(CommonObjectBase, Locatable):
             raise MaKaCError( _("the poster for this subcontribution has already been set"))
         self.poster=newPoster
         self.poster.setOwner( self )
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def removePoster( self ):
         if self.getPoster() is None:
@@ -10559,7 +10549,7 @@ class SubContribution(CommonObjectBase, Locatable):
         self.poster.delete()
         self.poster.setOwner(None)
         self.poster = None
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def recoverPoster(self, p):
         self.setPoster(p)
@@ -10578,14 +10568,14 @@ class SubContribution(CommonObjectBase, Locatable):
             raise MaKaCError( _("the Minutes for this subcontribution has already been set"))
         self.minutes=newMinutes
         self.minutes.setOwner( self )
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def createMinutes( self ):
         if self.getMinutes() != None:
             raise MaKaCError( _("The minutes for this subcontribution have already been created"), _("Sub Contribution"))
         self.minutes = Minutes()
         self.minutes.setOwner( self )
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
         return self.minutes
 
     def removeMinutes( self ):
@@ -10594,7 +10584,7 @@ class SubContribution(CommonObjectBase, Locatable):
         self.minutes.delete()
         self.minutes.setOwner( None )
         self.minutes = None
-        self.notifyModification()
+        self.notifyModification(raiseEvent=False)
 
     def recoverMinutes(self, min):
         self.removeMinutes() # To ensure that the current minutes are put in
@@ -10900,6 +10890,7 @@ class Material(CommonObjectBase):
         newRes.archive( self._getRepository(), forcedFileId = forcedFileId )
         self.__resources[newRes.getId()] = newRes
         self.notifyModification()
+        self._notify('resourceAdded', newRes)
         Logger.get('storage').debug("Finished storing resource %s for material %s" % (newRes.getId(), self.getLocator()))
 
     def getResourceList(self, sort=True):
@@ -10916,6 +10907,7 @@ class Material(CommonObjectBase):
 
     def removeResource( self, res ):
         if res.getId() in self.__resources.keys():
+            self._notify('resourceDeleted', res)
             del self.__resources[ res.getId() ]
             res.delete()
             self.notifyModification()
@@ -11262,7 +11254,8 @@ class Minutes(BuiltinMaterial):
             self.file.delete()
         self._setFile(forcedFileId = forcedFileId)
         self.file.replaceContent( text )
-        self.getOwner().notifyModification()
+        self._notify("resourceAdded", self.file)
+        self.getOwner().notifyModification(raiseEvent=False)
 
     def getText( self ):
         if not self.file:
@@ -11283,6 +11276,7 @@ class Minutes(BuiltinMaterial):
     def removeResource(self, res):
         Material.removeResource(self, res)
         if self.file is not None and res.getId().strip() == "minutes":
+            self._notify("resourceDeleted", self.file)
             self.file = None
             res.delete()
             self.notifyModification()
@@ -11382,6 +11376,9 @@ class Resource(CommonObjectBase):
 
     def getOwner( self ):
         return self._owner
+
+    def getParent( self ):
+        return self.getOwner()
 
     def getCategory( self ):
         #raise "%s:%s:%s"%(self.getOwner(), Material, isinstance(self.getOwner, Material))

@@ -245,3 +245,9 @@ class ObjectChangeListener(Component):
 
     def accessDomainRemoved(self, obj, domain):
         self._objectInfoChanged(obj, 'acl')
+
+    def resourceAdded(self, obj, who):
+        self._add(who, ['resource_added'])
+
+    def resourceDeleted(self, obj, who):
+        self._add(who, ['resource_deleted'])

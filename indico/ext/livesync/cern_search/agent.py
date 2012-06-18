@@ -31,10 +31,11 @@ from lxml import etree
 
 # plugin imports
 from indico.ext.livesync.agent import AgentProviderComponent, RecordUploader
-from indico.ext.livesync.batch import BaseBatchUploaderAgent, STATUS_DELETED
+from indico.ext.livesync.batch import BaseBatchUploaderAgent, STATUS_DELETED, STATUS_CHANGED, STATUS_CREATED, STATUS_ACL_CHANGED, STATUS_MOVED, STATUS_RESOURCE_ADDED, STATUS_RESOURCE_DELETED
 from indico.ext.livesync.metadata import MARCXMLGenerator
-from MaKaC.common.xmlGen import XMLGen
 from indico.util.date_time import nowutc
+from MaKaC.common.xmlGen import XMLGen
+from MaKaC import conference
 
 class CERNSearchUploadAgent(BaseBatchUploaderAgent):
 
@@ -81,11 +82,15 @@ class CERNSearchUploadAgent(BaseBatchUploaderAgent):
                     mg.generateDeleted(recId)
                 else:
                     if record.getOwner():
-                        # caching is disabled because ACL changes do not trigger
-                        # notifyModification, and consequently can be classified as a hit
-                        # even if they were changed
-                        # TODO: change overrideCache to False when this problem is solved
-                        mg.generate(record, overrideCache=True)
+                        if operation & STATUS_CREATED or operation & STATUS_CHANGED or operation & STATUS_RESOURCE_DELETED:
+                            mg.generate(record, overrideCache=True, includeIndicator= bool(operation & STATUS_CHANGED))
+                        if operation & STATUS_ACL_CHANGED:
+                            mg.generateACLChanged(record)
+                        if operation & STATUS_MOVED:
+                            mg.generateMovedChanged(record)
+                        if operation & STATUS_RESOURCE_ADDED:
+                            mg.generateResourceAdded(record)
+
                     else:
                         logger.warning('%s (%s) is marked as non-deleted and has no owner' % \
                                        (record, recId))
@@ -99,6 +104,55 @@ class CERNSearchUploadAgent(BaseBatchUploaderAgent):
         xg.closeTag("collection")
 
         return xg.getXml()
+
+    @classmethod
+    def computeRecords(cls, data, access, dbi=None):
+        """
+        Receives a sequence of ActionWrappers and returns a sequence
+        of records to be updated (created, changed or deleted)
+        """
+
+        records = dict()
+        deletedIds = dict()
+
+        for __, aw in data:
+            obj = aw.getObject()
+
+            ## TODO: enable this, when config is possible from interface
+            ## if not obj.canAccess(AccessWrapper(access)):
+            ##     # no access? jump over this one
+            ##     continue
+            for action in aw.getActions():
+                if action == 'deleted' and not isinstance(obj, conference.Category):
+                    # if the record has been deleted, mark it as such
+                    # nothing else will matter
+                    deletedIds[obj] = aw.getObjectId()
+                    cls._setStatus(records, obj, STATUS_DELETED)
+
+                elif action == 'created' and not isinstance(obj, conference.Category):
+                    # if the record has been created, mark it as such
+                    cls._setStatus(records, obj, STATUS_CREATED)
+
+                # protection changes have to be handled more carefully
+                elif action in ['set_private', 'set_public', 'acl_changed']:
+                    cls._computeProtectionChanges(obj, action, records, STATUS_ACL_CHANGED, dbi=dbi, checkInheritance=True)
+                elif action =='moved':
+                    cls._computeProtectionChanges(obj, action, records, STATUS_MOVED, dbi=dbi)
+                elif action == 'data_changed':
+                    if not isinstance(obj, conference.Category):
+                        cls._setStatus(records, obj, STATUS_CHANGED)
+                elif action == "title_changed" and isinstance(obj, conference.Category):
+                    cls._computeProtectionChanges(obj, action, records, STATUS_MOVED, dbi=dbi)
+                elif action == 'resource_added':
+                    cls._setStatus(records, obj, STATUS_RESOURCE_ADDED)
+                elif action == 'resource_DELETED':
+                    cls._setStatus(records, obj, STATUS_RESOURCE_DELETED)
+        for robj, state in records.iteritems():
+            if state & STATUS_DELETED:
+                yield robj, deletedIds[robj], state
+            else:
+                yield robj, None, state
+
 
 class CERNSearchRecordUploader(RecordUploader):
     """

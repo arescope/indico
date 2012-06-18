@@ -1132,6 +1132,7 @@ class outputGenerator(Observable):
         for path in conf.getCategoriesPath():
             out.openTag("datafield",[["tag","650"],["ind1"," "],["ind2","7"]])
             out.writeTag("subfield", ":".join(path), [["code","a"]])
+            out.writeTag("subfield", "/".join(conference.CategoryManager().getById(categId).getTitle() for categId in path), [["code","e"]])
             out.closeTag("datafield")
 
         ####################################
@@ -1231,6 +1232,8 @@ class outputGenerator(Observable):
 
         out.openTag("datafield",[["tag","980"],["ind1"," "],["ind2"," "]])
         out.writeTag("subfield", self._getRecordCollection(conf), [["code","a"]])
+        if includeIndicator == True:
+            out.writeTag("subfield","METADATA",[["code","c"]])
         out.closeTag("datafield")
 
         out.openTag("datafield",[["tag","970"],["ind1"," "],["ind2"," "]])
@@ -1299,6 +1302,7 @@ class outputGenerator(Observable):
         for path in cont.getConference().getCategoriesPath():
             out.openTag("datafield", [["tag", "650"], ["ind1", " "], ["ind2", "7"]])
             out.writeTag("subfield", ":".join(path), [["code", "a"]])
+            out.writeTag("subfield", "/".join(conference.CategoryManager().getById(categId).getTitle() for categId in path), [["code","e"]])
             out.closeTag("datafield")
 
         l = cont.getLocation()
@@ -1404,6 +1408,8 @@ class outputGenerator(Observable):
 
         out.openTag("datafield",[["tag","980"],["ind1"," "],["ind2"," "]])
         out.writeTag("subfield", self._getRecordCollection(cont), [["code","a"]])
+        if includeIndicator == True:
+            out.writeTag("subfield","METADATA",[["code","c"]])
         out.closeTag("datafield")
 
         self._generateLinkField(urlHandlers.UHContributionDisplay,
@@ -1476,9 +1482,9 @@ class outputGenerator(Observable):
             out.writeTag("subfield",keyword,[["code","a"]])
         out.closeTag("datafield")
 
-
         for path in subCont.getConference().getCategoriesPath():
             out.openTag("datafield",[["tag","650"],["ind1"," "],["ind2","7"]])
+            out.writeTag("subfield", "/".join(conference.CategoryManager().getById(categId).getTitle() for categId in path), [["code","e"]])
             out.writeTag("subfield", ":".join(path), [["code","a"]])
             out.closeTag("datafield")
 
@@ -1565,6 +1571,8 @@ class outputGenerator(Observable):
 
         out.openTag("datafield",[["tag","980"],["ind1"," "],["ind2"," "]])
         out.writeTag("subfield", self._getRecordCollection(subCont), [["code","a"]])
+        if includeIndicator == True:
+            out.writeTag("subfield","METADATA",[["code","c"]])
         out.closeTag("datafield")
 
         self._generateLinkField(urlHandlers.UHSubContributionDisplay, subCont,
