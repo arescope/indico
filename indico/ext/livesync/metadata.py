@@ -41,27 +41,30 @@ class MARCXMLGenerator:
         """
         self._user.setUser(avatar)
 
-    def generate(self, obj, out=None, overrideCache=False, deleted=False):
+    def generateDeleted(self, recId, out=None):
         if not out:
             out = self._XMLGen
 
-        if deleted:
-            if type(obj) != str:
-                raise AttributeError("Expected int id, got '%s'" % obj)
+        if type(recId) != str:
+            raise AttributeError("Expected int id, got '%s'" % recId)
 
-            out.openTag("record")
+        out.openTag("record")
 
-            out.openTag("datafield", [["tag", "970"], ["ind1", " "], ["ind2", " "]])
-            out.writeTag("subfield", "INDICO.%s" % obj, [["code", "a"]])
-            out.closeTag("datafield")
+        out.openTag("datafield",[["tag","970"],["ind1"," "],["ind2"," "]])
+        out.writeTag("subfield","INDICO.%s" % recId,[["code","a"]])
+        out.closeTag("datafield")
 
-            out.openTag("datafield", [["tag", "980"], ["ind1", " "], ["ind2", " "]])
-            out.writeTag("subfield", "DELETED", [["code", "c"]])
-            out.closeTag("datafield")
+        out.openTag("datafield",[["tag","980"],["ind1"," "],["ind2"," "]])
+        out.writeTag("subfield","DELETED",[["code","c"]])
+        out.closeTag("datafield")
 
-            out.closeTag("record")
+        out.closeTag("record")
 
-        elif isinstance(obj, conference.Conference):
+    def generate(self, obj, out=None, overrideCache=False):
+        if not out:
+            out = self._XMLGen
+
+        if isinstance(obj, conference.Conference):
             self.confToXMLMarc(obj, out=out, overrideCache=overrideCache)
         elif isinstance(obj, conference.Contribution):
             self.contToXMLMarc(obj, out=out, overrideCache=overrideCache)
@@ -69,7 +72,6 @@ class MARCXMLGenerator:
             self.subContToXMLMarc(obj, out=out, overrideCache=overrideCache)
         else:
             raise Exception("unknown object type: %s" % obj.__class__)
-        return out.getXml()
 
     def confToXMLMarc(self, obj, out=None, overrideCache=False):
         if not out:

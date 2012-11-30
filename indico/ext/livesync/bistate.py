@@ -177,7 +177,7 @@ class BistateBatchUploaderAgent(PushSyncAgent):
             deleted = operation & STATUS_DELETED
             try:
                 if deleted:
-                    mg.generate(recId, overrideCache=True, deleted=True)
+                    mg.generateDeleted(recId, overrideCache=True)
                 else:
                     if record.getOwner():
                         # caching is disabled because ACL changes do not trigger
