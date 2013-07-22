@@ -23,7 +23,8 @@ from indico.ext.livesync.agent import PushSyncAgent
 # legacy indico
 from MaKaC import conference
 # some useful constants
-STATUS_DELETED, STATUS_CREATED, STATUS_CHANGED, STATUS_ACL_CHANGED, STATUS_MOVED, STATUS_RESOURCE_ADDED , STATUS_RESOURCE_DELETED  = 1, 2, 4, 8, 16, 32, 64
+STATUS_DELETED, STATUS_CREATED, STATUS_CHANGED, STATUS_ACL_CHANGED, STATUS_MOVED = 1, 2, 4, 8, 16
+STATUS_RESOURCE_ADDED, STATUS_RESOURCE_DELETED = 32, 64
 
 # clear the ZEO local cache each new N records
 CACHE_SWEEP_LIMIT = 10000
@@ -47,7 +48,7 @@ class BaseRecordProcessor(object):
         chgSet[obj] |= state
 
     @classmethod
-    def _breakDownCategory(cls, categ, chgSet, state, dbi=None, checkInheritance = False):
+    def _breakDownCategory(cls, categ, chgSet, state, dbi=None, checkInheritance=False):
 
         # categories are never converted to records
 
@@ -56,7 +57,7 @@ class BaseRecordProcessor(object):
             cls._cacheControl(dbi, chgSet)
 
     @classmethod
-    def _breakDownConference(cls, conf, chgSet, state, checkInheritance = False):
+    def _breakDownConference(cls, conf, chgSet, state, checkInheritance=False):
         if not checkInheritance or conf.getAccessProtectionLevel() == 0:
             cls._setStatus(chgSet, conf, state)
 
@@ -64,7 +65,7 @@ class BaseRecordProcessor(object):
             cls._breakDownContribution(contrib, chgSet, state, checkInheritance=checkInheritance)
 
     @classmethod
-    def _breakDownContribution(cls, contrib, chgSet, state, checkInheritance = False):
+    def _breakDownContribution(cls, contrib, chgSet, state, checkInheritance=False):
         if not checkInheritance or contrib.getAccessProtectionLevel() == 0:
             cls._setStatus(chgSet, contrib, state)
         for scontrib in contrib.iterSubContributions():
@@ -72,7 +73,7 @@ class BaseRecordProcessor(object):
                 cls._setStatus(chgSet, scontrib, state)
 
     @classmethod
-    def _computeProtectionChanges(cls, obj, action, chgSet, status, dbi=None, checkInheritance = False):
+    def _computeProtectionChanges(cls, obj, action, chgSet, status, dbi=None, checkInheritance=False):
         if isinstance(obj, conference.Category):
             cls._breakDownCategory(obj, chgSet, status, dbi=dbi, checkInheritance=checkInheritance)
         elif isinstance(obj, conference.Conference):
@@ -148,11 +149,11 @@ class BaseBatchUploaderAgent(PushSyncAgent):
         Translates the objects/states to an easy to read textual representation
         """
 
-        states = {1: 'DEL', 2: 'CRT', 4: 'MOD', 8: 'PRO', 16: 'ACL', 32: 'MOV'}
+        states = {1: 'DEL', 2: 'CRT', 4: 'MOD', 8: 'ACL', 16: 'MOV', 32: 'RAD', 64: 'RDE'}
 
         # unfold status
         parts = []
-        k = 32
+        k = 64
         while (k > 0):
             if status & k:
                 parts.append(states[k])
