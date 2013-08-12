@@ -23,6 +23,7 @@ from indico.core.db import DBMgr
 # indico imports
 from indico.modules.scheduler import PeriodicTask
 from indico.util.date_time import nowutc, int_timestamp
+from indico.util.contextManager import ContextManager
 
 # plugin imports
 from indico.ext.livesync import SyncManager
@@ -34,6 +35,14 @@ class LiveSyncUpdateTask(PeriodicTask):
     """
 
     def run(self):
+        from indico.web.flask.app import make_app
+
+        app = make_app()
+        with app.test_request_context():
+            self._run()
+
+    def _run(self):
+        ContextManager.set('offlineMode', False)
         sm = SyncManager.getDBInstance()
 
         logger = self.getLogger()
