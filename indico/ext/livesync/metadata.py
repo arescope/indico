@@ -23,12 +23,13 @@ from MaKaC.common.output import outputGenerator
 from MaKaC import accessControl
 from indico.util.event import uniqueId
 
+
 class MARCXMLGenerator:
     """
     Generates MARCXML based on Indico DB objects
     """
 
-    def  __init__(self, XG):
+    def __init__(self, XG):
         # self.categoryRoot = conference.CategoryManager().getRoot()
         self._user = accessControl.AccessWrapper()
         self._XMLGen = XG
@@ -45,17 +46,17 @@ class MARCXMLGenerator:
         if not out:
             out = self._XMLGen
 
-        if type(recId) != str:
-            raise AttributeError("Expected int id, got '%s'" % recId)
+        if not isinstance(recId, str):
+            raise AttributeError("Expected int id, got '{1}'".format(recId))
 
         out.openTag("record")
 
-        out.openTag("datafield",[["tag","970"],["ind1"," "],["ind2"," "]])
-        out.writeTag("subfield","INDICO.%s" % recId,[["code","a"]])
+        out.openTag("datafield", [["tag", "970"], ["ind1", " "], ["ind2", " "]])
+        out.writeTag("subfield", "INDICO.{1}".format(recId), [["code", "a"]])
         out.closeTag("datafield")
 
-        out.openTag("datafield",[["tag","980"],["ind1"," "],["ind2"," "]])
-        out.writeTag("subfield","DELETED",[["code","c"]])
+        out.openTag("datafield", [["tag", "980"], ["ind1", " "], ["ind2", " "]])
+        out.writeTag("subfield", "DELETED", [["code", "c"]])
         out.closeTag("datafield")
 
         out.closeTag("record")
@@ -63,22 +64,22 @@ class MARCXMLGenerator:
     def generateResourceAdded(self, obj, out=None):
         if not out:
             out = self._XMLGen
-        if isinstance(obj,conference.Resource):
+        if isinstance(obj, conference.Resource):
             if obj.canAccess(self._user):
                 self._resourceAddedToMarc(obj, out)
         else:
-            raise Exception("unknown object type: %s" % obj.__class__)
+            raise Exception("unknown object type: {1}".format(obj.__class__))
 
     def _resourceAddedToMarc(self, obj, out):
 
         out.openTag("record")
 
-        out.openTag("datafield",[["tag","980"],["ind1"," "],["ind2"," "]])
-        out.writeTag("subfield","ADD_RESOURCE",[["code","c"]])
+        out.openTag("datafield", [["tag", "980"], ["ind1", " "], ["ind2", " "]])
+        out.writeTag("subfield", "ADD_RESOURCE", [["code", "c"]])
         out.closeTag("datafield")
 
-        out.openTag("datafield",[["tag","970"],["ind1"," "],["ind2"," "]])
-        out.writeTag("subfield","INDICO." + uniqueId(obj.getOwner().getOwner()),[["code","a"]])
+        out.openTag("datafield", [["tag", "970"], ["ind1", " "], ["ind2", " "]])
+        out.writeTag("subfield", "INDICO.{1}".format(uniqueId(obj.getOwner().getOwner())), [["code", "a"]])
         out.closeTag("datafield")
 
         self._outGen.resourceToXMLMarc21(obj, out)
@@ -88,19 +89,19 @@ class MARCXMLGenerator:
     def generateACLChanged(self, obj, out=None):
         if not out:
             out = self._XMLGen
-        if not(isinstance(obj,conference.Conference) or isinstance(obj,conference.Contribution) \
-                                                or isinstance(obj, conference.SubContribution)):
-            raise Exception("unknown object type: %s" % obj.__class__)
+        if not(isinstance(obj, conference.Conference) or isinstance(obj, conference.Contribution)
+                or isinstance(obj, conference.SubContribution)):
+            raise Exception("unknown object type: {1}".format(obj.__class__))
 
         out.openTag("record")
 
-        out.openTag("datafield",[["tag","970"],["ind1"," "],["ind2"," "]])
-        out.writeTag("subfield","INDICO." + uniqueId(obj),[["code","a"]])
+        out.openTag("datafield", [["tag", "970"], ["ind1", " "], ["ind2", " "]])
+        out.writeTag("subfield", "INDICO.{1}".format(uniqueId(obj)), [["code", "a"]])
         out.closeTag("datafield")
 
-        out.openTag("datafield",[["tag","980"],["ind1"," "],["ind2"," "]])
-        out.writeTag("subfield", self._outGen._getRecordCollection(obj), [["code","a"]])
-        out.writeTag("subfield","ACL",[["code","c"]])
+        out.openTag("datafield", [["tag", "980"], ["ind1", " "], ["ind2", " "]])
+        out.writeTag("subfield", self._outGen._getRecordCollection(obj), [["code", "a"]])
+        out.writeTag("subfield", "ACL", [["code", "c"]])
         out.closeTag("datafield")
 
         self._outGen._generateAccessList(obj, out, specifyId=False)
@@ -110,25 +111,27 @@ class MARCXMLGenerator:
     def generateMovedChanged(self, obj, out=None):
         if not out:
             out = self._XMLGen
-        if not(isinstance(obj,conference.Conference) or isinstance(obj,conference.Contribution) \
-                                                or isinstance(obj, conference.SubContribution)):
-            raise Exception("unknown object type: %s" % obj.__class__)
+        if not(isinstance(obj, conference.Conference) or isinstance(obj, conference.Contribution)
+                or isinstance(obj, conference.SubContribution)):
+            raise Exception("unknown object type: {1}".format(obj.__class__))
 
         out.openTag("record")
 
-        out.openTag("datafield",[["tag","970"],["ind1"," "],["ind2"," "]])
-        out.writeTag("subfield","INDICO." + uniqueId(obj),[["code","a"]])
+        out.openTag("datafield", [["tag", "970"], ["ind1", " "], ["ind2", " "]])
+        out.writeTag("subfield", "INDICO.{1}".format(uniqueId(obj)), [["code", "a"]])
         out.closeTag("datafield")
 
-        out.openTag("datafield",[["tag","980"],["ind1"," "],["ind2"," "]])
-        out.writeTag("subfield", self._outGen._getRecordCollection(obj), [["code","a"]])
-        out.writeTag("subfield","CATEGORY",[["code","c"]])
+        out.openTag("datafield", [["tag", "980"], ["ind1", " "], ["ind2", " "]])
+        out.writeTag("subfield", self._outGen._getRecordCollection(obj), [["code", "a"]])
+        out.writeTag("subfield", "CATEGORY", [["code", "c"]])
         out.closeTag("datafield")
 
         for path in obj.getConference().getCategoriesPath():
-            out.openTag("datafield",[["tag","650"],["ind1"," "],["ind2","7"]])
-            out.writeTag("subfield", ":".join(path), [["code","a"]])
-            out.writeTag("subfield", "/".join(conference.CategoryManager().getById(categId).getTitle() for categId in path), [["code","e"]])
+            out.openTag("datafield", [["tag", "650"], ["ind1", " "], ["ind2", "7"]])
+            out.writeTag("subfield", ":".join(path), [["code", "a"]])
+            out.writeTag("subfield",
+                         "/".join(conference.CategoryManager().getById(categId).getTitle() for categId in path),
+                         [["code", "e"]])
             out.closeTag("datafield")
 
         out.closeTag("record")
@@ -144,7 +147,7 @@ class MARCXMLGenerator:
         elif isinstance(obj, conference.SubContribution):
             self.subContToXMLMarc(obj, out=out, overrideCache=overrideCache, includeIndicator=includeIndicator)
         else:
-            raise Exception("unknown object type: %s" % obj.__class__)
+            raise Exception("unknown object type: {1}".format(obj.__class__))
 
     def confToXMLMarc(self, obj, out=None, overrideCache=False, includeIndicator=False):
         if not out:
