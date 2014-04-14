@@ -252,7 +252,7 @@ class PushSyncAgent(SyncAgent):
             records = self._generateRecords(data, till, dbi=dbi)
             # run agent-specific cycle
             result = self._run(records, logger=logger, monitor=monitor, dbi=dbi, task=task)
-        except:
+        except Exception as e:
             if logger:
                 logger.exception("Problem running agent %s" % self.getId())
             return None

@@ -74,12 +74,11 @@ class InvenioBatchUploaderAgent(BaseBatchUploaderAgent):
                         # TODO: change overrideCache to False when this problem is solved
                         mg.generate(record, overrideCache=True)
                     else:
-                        logger.warning('%s (%s) is marked as non-deleted and has no owner' % \
-                                       (record, recId))
-            except:
+                        logger.warning('{{1} ({2}) is marked as non-deleted and has no owner'.format((record, recId))
+            except Exception as e:
                 if logger:
-                    logger.exception("Something went wrong while processing '%s' (recId=%s) (owner=%s)! Possible metadata errors." %
-                                     (record, recId, record.getOwner()))
+                    logger.exception("""Something went wrong while processing '{1}' (recId={2}) (owner={3})!
+                                     Possible metadata errors.""".format(record, recId, record.getOwner()))
                     # avoid duplicate record
                 self._removeUnfinishedRecord(mg._XMLGen)
 
