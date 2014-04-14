@@ -49,12 +49,8 @@ from MaKaC.common.TemplateExec import escapeHTMLForJS
 from indico.util.event import uniqueId
 
 
-# TODO This really needs to be fixed... no i18n and strange implementation using month names as keys
-def stringToDate(str):
-    months = {"January": 1, "February": 2, "March": 3, "April": 4, "May": 5, "June": 6,
-              "July": 7, "August": 8, "September": 9, "October": 10, "November": 11, "December": 12}
-    [day, month, year] = str.split("-")
-    return datetime(int(year), months[month], int(day))
+def stringToDate(date_str):
+    return datetime.strptime(date_str, "%d-%B-%Y")
 
 
 class XSLTransformer:
