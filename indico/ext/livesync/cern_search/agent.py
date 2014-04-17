@@ -145,7 +145,7 @@ class CERNSearchUploadAgent(BaseBatchUploaderAgent):
                     cls._computeProtectionChanges(obj, action, records, STATUS_MOVED, dbi=dbi)
                 elif action == 'resource_added':
                     cls._setStatus(records, obj, STATUS_RESOURCE_ADDED)
-                elif action == 'resource_DELETED':
+                elif action == 'resource_deleted':
                     cls._setStatus(records, obj, STATUS_RESOURCE_DELETED)
         for robj, state in records.iteritems():
             if state & STATUS_DELETED:
