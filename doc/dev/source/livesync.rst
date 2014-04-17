@@ -39,6 +39,47 @@ So far, :py:class:`PushSyncAgent` is the only available agent type.
    .. automethod:: _generateRecords
    .. automethod:: _run
 
+----------------------
+BaseBatchUploaderAgent
+----------------------
+
+This is the basic implementation for Invenio and CERN Search agents.
+
+.. currentmodule:: indico.ext.livesync.batch
+
+.. autoclass:: BaseBatchUploaderAgent
+
+.. autoclass:: BaseRecordProcessor
+
+   .. automethod:: computeRecords
+
+computeRecords has to be overriden by the different search engines in order to perform
+different actions depending on the record status.
+
+---------------
+Invenio Agent
+---------------
+
+.. currentmodule:: indico.ext.livesync.invenio.agent
+
+.. autoclass:: InvenioBatchUploaderAgent
+
+   .. automethod:: _getMetadata
+
+-----------------
+Cern Search Agent
+-----------------
+
+.. currentmodule:: indico.ext.livesync.cern_search.agent
+
+.. autoclass:: CERNSearchUploadAgent
+
+   .. automethod:: _getMetadata
+
+.. autoclass:: CERNSearchRecordProcessor
+
+   .. automethod:: computeRecords
+
 +++
 CLI
 +++
